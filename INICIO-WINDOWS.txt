@@ -1,0 +1,22 @@
+EL PRODE DE EVA — Cómo levantar la app en Windows
+================================================
+
+Ubicación del proyecto (desarrollo):
+  C:\Users\gccun\cursor\prode-eva
+
+1) Abrí CMD en esa carpeta (Shift + clic derecho en la carpeta > "Abrir en terminal").
+
+2) Si falta "next" o hubo errores, reinstalá dependencias:
+   rmdir /s /q node_modules
+   del package-lock.json
+   npm install
+
+3) Levantá la app:
+   npm run dev
+   O doble clic en dev.cmd
+
+4) Navegador: http://localhost:3000
+
+---
+Nota: puede quedar una copia vieja en OneDrive (…\Negocios digitales\prode-eva).
+Cerrá Cursor/terminal que la usen y borrá esa carpeta si ya no la necesitás.
