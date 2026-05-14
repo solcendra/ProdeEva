@@ -64,6 +64,11 @@ export function MatchCard({ match }: Props) {
     setHomeStr(String(home));
     setAwayStr(String(away));
     setEvaLine(line);
+    window.dispatchEvent(
+      new CustomEvent("prode-eva-activity", {
+        detail: { type: "prediction-submitted", matchId: match.id },
+      }),
+    );
     setBurst(true);
     window.setTimeout(() => setBurst(false), 650);
     window.setTimeout(() => setSending(false), 400);

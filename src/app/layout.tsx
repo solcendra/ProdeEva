@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Oswald } from "next/font/google";
 import { AppProvider } from "@/context/app-provider";
+import { EvaFloatingAssistant } from "@/components/eva-floating-assistant";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,7 +35,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${oswald.variable} font-sans antialiased`}
       >
-        <AppProvider>{children}</AppProvider>
+        <AppProvider>
+          {children}
+          <EvaFloatingAssistant />
+        </AppProvider>
       </body>
     </html>
   );
