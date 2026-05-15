@@ -31,7 +31,6 @@ export function MatchCard({ match }: Props) {
   /** Texto en inputs: evita el bug del input number controlado que no deja borrar el 0. */
   const [homeStr, setHomeStr] = useState("0");
   const [awayStr, setAwayStr] = useState("0");
-  const [evaLine, setEvaLine] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [burst, setBurst] = useState(false);
 
@@ -63,10 +62,9 @@ export function MatchCard({ match }: Props) {
     const { evaLine: line } = submitPrediction(match.id, home, away);
     setHomeStr(String(home));
     setAwayStr(String(away));
-    setEvaLine(line);
     window.dispatchEvent(
       new CustomEvent("prode-eva-activity", {
-        detail: { type: "prediction-submitted", matchId: match.id },
+        detail: { type: "prediction-submitted", matchId: match.id, evaLine: line },
       }),
     );
     setBurst(true);
@@ -219,17 +217,6 @@ export function MatchCard({ match }: Props) {
                 Enviar predicción
               </button>
             </form>
-          )}
-          {evaLine && (
-            <p
-              className={`mt-3 rounded-lg border border-[#00A94F]/20 bg-[#00A94F]/5 px-3 py-2 text-sm font-medium text-neutral-800 transition ${
-                burst ? "scale-[1.02]" : ""
-              }`}
-              role="status"
-            >
-              <span className="text-[#007A38]">Eva: </span>
-              {evaLine}
-            </p>
           )}
         </div>
       </div>

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useApp } from "@/context/app-provider";
 import { findPrediction } from "@/lib/scoring";
 import { EVA_USER_ID } from "@/types";
@@ -102,7 +102,9 @@ export function EvaFloatingAssistant() {
   const { hydrated, currentUser, state } = useApp();
   const [open, setOpen] = useState(false);
   const [pulse, setPulse] = useState(false);
-  const [transient, setTransient] = useState<string | null>(null);
+  /** Comentario irónico de Eva tras guardar pronóstico (se muestra en este popup). */
+  const [evaPostSubmit, setEvaPostSubmit] = useState<string | null>(null);
+  const clearEvaTimer = useRef<number | null>(null);
 
   const isEva = Boolean(
     currentUser?.isEva || currentUser?.id === EVA_USER_ID,
@@ -149,21 +151,32 @@ export function EvaFloatingAssistant() {
   );
 
   const onActivity = (e: Event) => {
-    const d = (e as CustomEvent<{ type?: string }>).detail;
-    if (d?.type === "prediction-submitted") {
-      setTransient("Predicción guardada. Si el mercado sigue abierto, podés ajustarla y reenviar.");
-      setPulse(true);
-      window.setTimeout(() => setPulse(false), 900);
-      window.setTimeout(() => setTransient(null), 8000);
-    }
+    const d = (e as CustomEvent<{ type?: string; evaLine?: string }>).detail;
+    if (d?.type !== "prediction-submitted") return;
+    const line =
+      typeof d.evaLine === "string" && d.evaLine.trim() !== ""
+        ? d.evaLine.trim()
+        : "Listo. Dato guardado.";
+    if (clearEvaTimer.current) window.clearTimeout(clearEvaTimer.current);
+    setEvaPostSubmit(line);
+    setOpen(true);
+    setPulse(true);
+    window.setTimeout(() => setPulse(false), 900);
+    clearEvaTimer.current = window.setTimeout(() => {
+      setEvaPostSubmit(null);
+      clearEvaTimer.current = null;
+    }, 18000);
   };
 
   useEffect(() => {
     window.addEventListener("prode-eva-activity", onActivity);
-    return () => window.removeEventListener("prode-eva-activity", onActivity);
+    return () => {
+      window.removeEventListener("prode-eva-activity", onActivity);
+      if (clearEvaTimer.current) window.clearTimeout(clearEvaTimer.current);
+    };
   }, []);
 
-  const displayBody = transient ?? block.body;
+  const showEvaReply = evaPostSubmit != null;
 
   return (
     <div className="pointer-events-none fixed bottom-5 right-5 z-[100] flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
@@ -187,7 +200,7 @@ export function EvaFloatingAssistant() {
             <div className="min-w-0 flex-1">
               <div className="flex items-start justify-between gap-2">
                 <p className="font-display text-sm font-semibold tracking-wide text-neutral-900">
-                  {block.title}
+                  {showEvaReply ? "Eva · comentario" : block.title}
                 </p>
                 <button
                   type="button"
@@ -198,13 +211,30 @@ export function EvaFloatingAssistant() {
                   ✕
                 </button>
               </div>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-700">{displayBody}</p>
-              {block.hint && !transient && (
-                <p className="mt-2 border-t border-neutral-100 pt-2 text-xs italic text-neutral-500">
-                  {block.hint}
-                </p>
+              {showEvaReply ? (
+                <>
+                  <p className="mt-2 text-base font-medium leading-snug text-neutral-900">
+                    “{evaPostSubmit}”
+                  </p>
+                  <p className="mt-2 text-xs leading-relaxed text-neutral-600">
+                    Tu predicción ya quedó guardada. Esto es solo humor de equipo: podés seguir
+                    ajustando y reenviar mientras el mercado esté abierto.
+                  </p>
+                  <p className="mt-3 border-t border-neutral-100 pt-2 text-[11px] text-neutral-500">
+                    {block.body}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="mt-2 text-sm leading-relaxed text-neutral-700">{block.body}</p>
+                  {block.hint && (
+                    <p className="mt-2 border-t border-neutral-100 pt-2 text-xs italic text-neutral-500">
+                      {block.hint}
+                    </p>
+                  )}
+                </>
               )}
-              {pathname === "/" && (
+              {pathname === "/" && !showEvaReply && (
                 <Link
                   href="/login"
                   className="mt-3 inline-flex rounded-full bg-[#00A94F] px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white hover:bg-[#009046]"
